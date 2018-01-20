@@ -1,0 +1,10 @@
+[package]
+name = "neurotic"
+version = "0.1.0"
+authors = ["Paul Hendry <paul@pshendry.com>"]
+
+[dependencies]
+nalgebra = "^0.13.1"
+
+[dev-dependencies]
+clippy = { version = "*" }
