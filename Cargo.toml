@@ -5,6 +5,8 @@ authors = ["Paul Hendry <paul@pshendry.com>"]
 
 [dependencies]
 nalgebra = "^0.13.1"
+num-traits = "^0.1.41"
+rand = "0.4.2"
 
 [dev-dependencies]
 clippy = { version = "*" }
