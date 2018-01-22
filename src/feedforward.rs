@@ -6,14 +6,16 @@ use distribution::Distribution;
 
 /// Defines the parameters for creating a `NeuralNetwork`.
 pub struct NeuralNetworkParameters<'l, 'd, D>
-    where D: 'd + Distribution
+where
+    D: 'd + Distribution,
 {
     layer_sizes: &'l [usize],
-    initialization_distribution: &'d mut D
+    initialization_distribution: &'d mut D,
 }
 
 impl<'l, 'd, D> NeuralNetworkParameters<'l, 'd, D>
-    where D: 'd + Distribution
+where
+    D: 'd + Distribution,
 {
     /// Constructs a new `NeuralNetworkParameters` object, returning `None` if any of the
     /// specified parameters are invalid.
@@ -43,20 +45,20 @@ pub struct NeuralNetwork<'l> {
 impl<'l> NeuralNetwork<'l> {
     /// Constructs a new `NeuralNetwork` with the provided parameters.
     pub fn new<'d, D>(parameters: &mut NeuralNetworkParameters<'l, 'd, D>) -> NeuralNetwork<'l>
-        where D: 'd + Distribution
+    where
+        D: 'd + Distribution,
     {
         let mut biases = Vec::with_capacity(parameters.layer_sizes.len() - 1);
         let mut weights = Vec::with_capacity(parameters.layer_sizes.len() - 1);
 
         for i in 1..parameters.layer_sizes.len() {
-            biases[i - 1] = DVector::from_fn(
-                parameters.layer_sizes[i],
-                |_, _| parameters.initialization_distribution.sample()
-            );
+            biases[i - 1] = DVector::from_fn(parameters.layer_sizes[i], |_, _| {
+                parameters.initialization_distribution.sample()
+            });
             weights[i - 1] = DMatrix::from_fn(
                 parameters.layer_sizes[i],
                 parameters.layer_sizes[i - 1],
-                |_, _| parameters.initialization_distribution.sample()
+                |_, _| parameters.initialization_distribution.sample(),
             );
         }
 

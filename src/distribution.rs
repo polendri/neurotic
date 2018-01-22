@@ -1,6 +1,6 @@
 //! Defines several random distributions for initializing weights and biases.
 
-use rand::{XorShiftRng, weak_rng};
+use rand::{weak_rng, XorShiftRng};
 use rand::distributions::{Normal, Sample};
 
 /// A type that can sample values according to a random distribution.
