@@ -1,43 +1,50 @@
 //! Defines several random distributions for initializing weights and biases.
 
 use rand::{weak_rng, XorShiftRng};
-use rand::distributions::{Normal, Sample};
+use rand::distributions::{self, Sample};
 
 /// A type that can sample values according to a random distribution.
-pub trait Distribution: Sized {
+pub trait Distribution {
     /// Generate a random `f64` according to the distribution.
     fn sample(&mut self) -> f64;
 }
 
-/// The Normal distribution.
-pub struct NormalDistribution {
+/// The Normal (or Gaussian) distribution.
+pub struct Normal {
     rng: XorShiftRng,
-    normal: Normal,
+    normal: distributions::Normal,
 }
 
-impl NormalDistribution {
+impl Normal {
     /// Constructs a new `NormalDistribution` with the specified mean and standard deviation.
     pub fn new(mean: f64, std_dev: f64) -> Self {
-        NormalDistribution {
+        Normal {
             rng: weak_rng(),
-            normal: Normal::new(mean, std_dev),
+            normal: distributions::Normal::new(mean, std_dev),
         }
     }
 }
 
-impl Distribution for NormalDistribution {
+impl Distribution for Normal {
     fn sample(&mut self) -> f64 {
         self.normal.sample(&mut self.rng)
     }
 }
 
-/// The Gaussian (or Standard Normal) distribution, a Normal distribution with mean of 0 and a
+/// The Standard Normal distribution, a Normal distribution with mean of 0 and a
 /// standard deviation of 1.
-pub struct GaussianDistribution(NormalDistribution);
+pub struct StandardNormal(Normal);
 
-impl GaussianDistribution {
+impl StandardNormal {
     /// Constructs a new `GaussianDistribution`.
     pub fn new() -> Self {
-        GaussianDistribution(NormalDistribution::new(0., 1.))
+        StandardNormal(Normal::new(0., 1.))
+    }
+}
+
+impl Distribution for StandardNormal {
+    fn sample(&mut self) -> f64 {
+        let StandardNormal(ref mut normal) = *self;
+        normal.sample()
     }
 }

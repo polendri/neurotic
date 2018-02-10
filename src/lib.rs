@@ -5,8 +5,12 @@ extern crate nalgebra;
 extern crate num_traits;
 extern crate rand;
 
+pub mod activation;
+pub mod cost;
 pub mod distribution;
 pub mod feedforward;
+pub mod initializer;
+pub mod optimizer;
 
 #[cfg(test)]
 mod tests {
