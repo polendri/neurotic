@@ -1,16 +1,18 @@
 //! A fast, easy-to-use library for implementing neural networks.
-#![warn(missing_docs)]
+//#![warn(missing_docs)]
 
+extern crate generic_array;
 extern crate nalgebra;
 extern crate num_traits;
 extern crate rand;
+extern crate typenum;
 
 pub mod activation;
 pub mod cost;
 pub mod distribution;
 pub mod feedforward;
 pub mod initializer;
-pub mod optimizer;
+//pub mod optimizer;
 
 #[cfg(test)]
 mod tests {

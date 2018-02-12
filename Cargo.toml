@@ -4,9 +4,11 @@ version = "0.1.0"
 authors = ["Paul Hendry <paul@pshendry.com>"]
 
 [dependencies]
-nalgebra = "^0.13.1"
+generic-array = "^0.8.0"
+nalgebra = "0.14.0"
 num-traits = "^0.1.41"
-rand = "0.4.2"
+rand = "^0.4.2"
+typenum = "^1.7.0"
 
 [dev-dependencies]
 clippy = { version = "*" }
