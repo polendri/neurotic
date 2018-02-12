@@ -5,7 +5,7 @@ use std::ops::Mul;
 
 use generic_array::ArrayLength;
 use nalgebra::{Dim, DimAdd, DimMul, DimName, DimSum, MatrixMN, Scalar, U1, VectorN};
-use typenum::{NonZero, Prod};
+use typenum::{B1, NonZero, Prod, UInt, UTerm};
 
 use activation::ActivationFunction;
 use cost::CostFunction;
@@ -20,11 +20,12 @@ where
     <X as DimAdd<U1>>::Output: DimName,
     <H as DimAdd<U1>>::Output: DimName,
     H::Value: Mul<<<X as DimAdd<U1>>::Output as DimName>::Value>,
-    Y::Value: Mul<<<H as DimAdd<U1>>::Output as DimName>::Value>,
+    Y::Value: Mul<<<H as DimAdd<U1>>::Output as DimName>::Value> + Mul<UInt<UTerm, B1>>,
     Prod<H::Value, <<X as DimAdd<U1>>::Output as DimName>::Value>: ArrayLength<f64>,
     Prod<Y::Value, <<H as DimAdd<U1>>::Output as DimName>::Value>: ArrayLength<f64>,
+    Prod<Y::Value, UInt<UTerm, B1>>: ArrayLength<f64>,
     A: ActivationFunction,
-    C: CostFunction,
+    C: CostFunction<Y>,
     I: 'i + Initializer<X, H, Y>,
 {
     initializer: &'i mut I,
@@ -43,11 +44,12 @@ where
     <X as DimAdd<U1>>::Output: DimName,
     <H as DimAdd<U1>>::Output: DimName,
     H::Value: Mul<<<X as DimAdd<U1>>::Output as DimName>::Value>,
-    Y::Value: Mul<<<H as DimAdd<U1>>::Output as DimName>::Value>,
+    Y::Value: Mul<<<H as DimAdd<U1>>::Output as DimName>::Value> + Mul<UInt<UTerm, B1>>,
     Prod<H::Value, <<X as DimAdd<U1>>::Output as DimName>::Value>: ArrayLength<f64>,
     Prod<Y::Value, <<H as DimAdd<U1>>::Output as DimName>::Value>: ArrayLength<f64>,
+    Prod<Y::Value, UInt<UTerm, B1>>: ArrayLength<f64>,
     A: ActivationFunction,
-    C: CostFunction,
+    C: CostFunction<Y>,
     I: 'i + Initializer<X, H, Y>,
 {
     /// Constructs a new `NeuralNetworkParameters` object, returning `None` if any of the
@@ -100,11 +102,12 @@ where
     <X as DimAdd<U1>>::Output: DimName,
     <H as DimAdd<U1>>::Output: DimName,
     H::Value: Mul<<<X as DimAdd<U1>>::Output as DimName>::Value>,
-    Y::Value: Mul<<<H as DimAdd<U1>>::Output as DimName>::Value>,
+    Y::Value: Mul<<<H as DimAdd<U1>>::Output as DimName>::Value> + Mul<UInt<UTerm, B1>>,
     Prod<H::Value, <<X as DimAdd<U1>>::Output as DimName>::Value>: ArrayLength<f64>,
     Prod<Y::Value, <<H as DimAdd<U1>>::Output as DimName>::Value>: ArrayLength<f64>,
+    Prod<Y::Value, UInt<UTerm, B1>>: ArrayLength<f64>,
     A: ActivationFunction,
-    C: CostFunction,
+    C: CostFunction<Y>,
 {
     /// The weights and biases of the neural network. The first component of the tuple is an
     /// `H*(X+1)` matrix whose first row represents the biases for each neuron in the hidden layer,
@@ -129,10 +132,10 @@ where
     H::Value: Mul<X::Value>,
     Prod<<H as DimName>::Value, <X as DimName>::Value>: ArrayLength<f64>,
     Y: DimName,
-    Y::Value: Mul<H::Value>,
+    Y::Value: Mul<<<H as DimAdd<U1>>::Output as DimName>::Value> + Mul<UInt<UTerm, B1>>,
     //Prod<Y::Value, H::Value>: ArrayLength<f64>,
     A: ActivationFunction,
-    C: CostFunction,
+    C: CostFunction<Y>,
 {
     fn feedforward(&self, input: DVector<f64>) -> DVector<f64> {
         let mut a = input;
