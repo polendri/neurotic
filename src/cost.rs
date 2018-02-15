@@ -1,17 +1,13 @@
 //! Cost functions
 
-use std::ops::Mul;
-
-use generic_array::ArrayLength;
-use nalgebra::{DimName, VectorN};
-use typenum::{B1, Prod, UInt, UTerm};
+use nalgebra::{DefaultAllocator, Dim, U1, VectorN};
+use nalgebra::allocator::Allocator;
 
 /// Cost function
 pub trait CostFunction<Y>
 where
-    Y: DimName,
-    Y::Value: Mul<UInt<UTerm, B1>>,
-    Prod<Y::Value, UInt<UTerm, B1>>: ArrayLength<f64>,
+    Y: Dim,
+    DefaultAllocator: Allocator<f64, Y, U1>,
 {
     /// Evaluates the cost function
     fn eval(input: &VectorN<f64, Y>, target: &VectorN<f64, Y>) -> f64;
@@ -26,9 +22,8 @@ pub struct MeanSquared;
 
 impl<Y> CostFunction<Y> for MeanSquared
 where
-    Y: DimName,
-    Y::Value: Mul<UInt<UTerm, B1>>,
-    Prod<Y::Value, UInt<UTerm, B1>>: ArrayLength<f64>,
+    Y: Dim,
+    DefaultAllocator: Allocator<f64, Y, U1>,
 {
     fn eval(input: &VectorN<f64, Y>, target: &VectorN<f64, Y>) -> f64 {
         let mut diff = input - target;

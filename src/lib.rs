@@ -10,9 +10,11 @@ extern crate typenum;
 pub mod activation;
 pub mod cost;
 pub mod distribution;
-pub mod feedforward;
 pub mod initializer;
+mod network;
 //pub mod optimizer;
+
+pub use network::*;
 
 #[cfg(test)]
 mod tests {
