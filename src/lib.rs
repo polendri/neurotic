@@ -12,7 +12,7 @@ pub mod cost;
 pub mod distribution;
 pub mod initializer;
 mod network;
-//pub mod optimizer;
+pub mod optimizer;
 
 pub use network::*;
 

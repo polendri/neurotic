@@ -12,3 +12,4 @@ typenum = "^1.7.0"
 
 [dev-dependencies]
 clippy = { version = "*" }
+byteorder = "^1.2.1"

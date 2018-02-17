@@ -3,20 +3,30 @@
 use rand::{thread_rng, Rng};
 use std::cmp;
 
-use nalgebra::DVector;
+use nalgebra::{DefaultAllocator, DimAdd, DimName, DimSum, MatrixMN, U1, VectorN};
+use nalgebra::allocator::{Allocator, Reallocator};
 
 use activation::ActivationFunction;
 use cost::CostFunction;
-use feedforward::NeuralNetwork;
+use network::NeuralNetwork;
 
-/// Optimizer function
-pub trait Optimizer<A, C> : Sized
+pub trait Optimizer<X, H, Y, A, C, N>
 where
+    X: DimName + DimAdd<U1>,
+    H: DimName + DimAdd<U1>,
+    Y: DimName,
     A: ActivationFunction,
-    C: CostFunction,
+    C: CostFunction<Y>,
+    N: DimName,
+    <X as DimAdd<U1>>::Output: DimName,
+    <H as DimAdd<U1>>::Output: DimName,
+    DefaultAllocator: Allocator<f64, H, DimSum<X, U1>> +
+                      Allocator<f64, Y, DimSum<H, U1>> +
+                      Allocator<f64, Y, U1> +
+                      Allocator<f64, N, X> +
+                      Allocator<f64, N, Y>
 {
-    /// TODO
-    fn optimize(&self, model: &mut NeuralNetwork<A, C, Self>, data: &[(DVector<f64>, DVector<f64>)]);
+    fn optimize(&self, model: &mut NeuralNetwork<X, H, Y, A, C>, data: MatrixMN<f64, N, X>, labels: MatrixMN<f64, N, Y>);
 }
 
 /// Gradient descent optimizer
@@ -25,12 +35,24 @@ pub struct GradientDescent {
     learning_rate: f64,
 }
 
-impl<A, C> Optimizer<A, C> for GradientDescent
+/*
+impl<X, H, Y, A, C, N> Optimizer<X, H, Y, A, C, N> for GradientDescent
 where
+    X: DimName + DimAdd<U1>,
+    H: DimName + DimAdd<U1>,
+    Y: DimName,
     A: ActivationFunction,
-    C: CostFunction,
+    C: CostFunction<Y>,
+    N: DimName,
+    <X as DimAdd<U1>>::Output: DimName,
+    <H as DimAdd<U1>>::Output: DimName,
+    DefaultAllocator: Allocator<f64, H, DimSum<X, U1>> +
+                      Allocator<f64, Y, DimSum<H, U1>> +
+                      Allocator<f64, Y, U1> +
+                      Allocator<f64, N, X> +
+                      Allocator<f64, N, Y>
 {
-    fn optimize(&self, model: &mut NeuralNetwork<A, C, Self>, data: &[(DVector<f64>, DVector<f64>)]) {
+    fn optimize(&self, model: &mut NeuralNetwork<X, H, Y, A, C>, data: MatrixMN<f64, N, X>, labels: MatrixMN<f64, N, Y>);
         let mut grads = model.compute_grad(&data[0].0, &data[0].1);
 
         for i in 1..data.len() {
@@ -95,3 +117,4 @@ where
         }
     }
 }
+*/
