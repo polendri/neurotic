@@ -3,118 +3,130 @@
 use rand::{thread_rng, Rng};
 use std::cmp;
 
-use nalgebra::{DefaultAllocator, DimAdd, DimName, DimSum, MatrixMN, U1, VectorN};
+use nalgebra::{DefaultAllocator, DimAdd, DimName, DimSum, U1, VectorN};
 use nalgebra::allocator::{Allocator, Reallocator};
 
 use activation::ActivationFunction;
 use cost::CostFunction;
 use network::NeuralNetwork;
 
-pub trait Optimizer<X, H, Y, A, C, N>
+pub trait Optimizer<X, H, Y, A, C>
 where
     X: DimName + DimAdd<U1>,
     H: DimName + DimAdd<U1>,
     Y: DimName,
     A: ActivationFunction,
     C: CostFunction<Y>,
-    N: DimName,
     <X as DimAdd<U1>>::Output: DimName,
     <H as DimAdd<U1>>::Output: DimName,
-    DefaultAllocator: Allocator<f64, H, DimSum<X, U1>> +
-                      Allocator<f64, Y, DimSum<H, U1>> +
+    DefaultAllocator: Allocator<f64, X, U1> +
+                      Allocator<f64, H, U1> +
                       Allocator<f64, Y, U1> +
-                      Allocator<f64, N, X> +
-                      Allocator<f64, N, Y>
+                      Allocator<f64, U1, DimSum<X, U1>> +
+                      Allocator<f64, H, DimSum<X, U1>> +
+                      Allocator<f64, Y, DimSum<H, U1>> +
+                      Allocator<f64, DimSum<H, U1>, Y> +
+                      Reallocator<f64, X, U1, DimSum<X, U1>, U1> +
+                      Reallocator<f64, H, U1, DimSum<H, U1>, U1> +
+                      Reallocator<f64, U1, H, U1, DimSum<H, U1>>
 {
-    fn optimize(&self, model: &mut NeuralNetwork<X, H, Y, A, C>, data: MatrixMN<f64, N, X>, labels: MatrixMN<f64, N, Y>);
+    fn optimize(&self, model: &mut NeuralNetwork<X, H, Y, A, C>, data: &[VectorN<f64, X>], labels: &[VectorN<f64, Y>]);
 }
 
 /// Gradient descent optimizer
 #[derive(Clone, Copy, Debug)]
 pub struct GradientDescent {
-    learning_rate: f64,
+    pub learning_rate: f64,
 }
 
-/*
-impl<X, H, Y, A, C, N> Optimizer<X, H, Y, A, C, N> for GradientDescent
+impl<X, H, Y, A, C> Optimizer<X, H, Y, A, C> for GradientDescent
 where
     X: DimName + DimAdd<U1>,
     H: DimName + DimAdd<U1>,
     Y: DimName,
     A: ActivationFunction,
     C: CostFunction<Y>,
-    N: DimName,
     <X as DimAdd<U1>>::Output: DimName,
     <H as DimAdd<U1>>::Output: DimName,
-    DefaultAllocator: Allocator<f64, H, DimSum<X, U1>> +
-                      Allocator<f64, Y, DimSum<H, U1>> +
+    DefaultAllocator: Allocator<f64, X, U1> +
+                      Allocator<f64, H, U1> +
                       Allocator<f64, Y, U1> +
-                      Allocator<f64, N, X> +
-                      Allocator<f64, N, Y>
+                      Allocator<f64, U1, DimSum<X, U1>> +
+                      Allocator<f64, H, DimSum<X, U1>> +
+                      Allocator<f64, Y, DimSum<H, U1>> +
+                      Allocator<f64, DimSum<H, U1>, Y> +
+                      Reallocator<f64, X, U1, DimSum<X, U1>, U1> +
+                      Reallocator<f64, H, U1, DimSum<H, U1>, U1> +
+                      Reallocator<f64, U1, H, U1, DimSum<H, U1>>
 {
-    fn optimize(&self, model: &mut NeuralNetwork<X, H, Y, A, C>, data: MatrixMN<f64, N, X>, labels: MatrixMN<f64, N, Y>);
-        let mut grads = model.compute_grad(&data[0].0, &data[0].1);
+    fn optimize(&self, model: &mut NeuralNetwork<X, H, Y, A, C>, data: &[VectorN<f64, X>], labels: &[VectorN<f64, Y>]) {
+        let mut grads = model.compute_grad(&data[0], &labels[0]);
 
         for i in 1..data.len() {
-            let (b_grads, w_grads) = model.compute_grad(&data[i].0, &data[i].1);
-
-            for j in 0..grads.0.len() {
-                grads.0[j] += b_grads[j].clone();
-                grads.1[j] += w_grads[j].clone();
-            }
+            let (b_grads, w_grads) = model.compute_grad(&data[i], &labels[i]);
+            grads.0 += &b_grads;
+            grads.1 += &w_grads;
         }
 
-        for i in 0..grads.0.len() {
-            grads.0[i].apply(|b| -self.learning_rate * b / (data.len() as f64));
-            grads.1[i].apply(|w| -self.learning_rate * w / (data.len() as f64));
-        }
+        grads.0.apply(|w| w - self.learning_rate * w / (data.len() as f64));
+        grads.1.apply(|w| w - self.learning_rate * w / (data.len() as f64));
 
-        model.optimize(&grads.0, &grads.1)
+        model.apply_grad(&grads);
     }
 }
 
-/// Stochastic descent optimizer
+/// Stochastic gradient descent optimizer
 #[derive(Clone, Copy, Debug)]
 pub struct StochasticGradientDescent {
-    batch_size: usize,
-    learning_rate: f64,
+    pub batch_size: usize,
+    pub learning_rate: f64,
 }
 
-impl<A, C> Optimizer<A, C> for StochasticGradientDescent
+impl<X, H, Y, A, C> Optimizer<X, H, Y, A, C> for StochasticGradientDescent
 where
+    X: DimName + DimAdd<U1>,
+    H: DimName + DimAdd<U1>,
+    Y: DimName,
     A: ActivationFunction,
-    C: CostFunction,
+    C: CostFunction<Y>,
+    <X as DimAdd<U1>>::Output: DimName,
+    <H as DimAdd<U1>>::Output: DimName,
+    DefaultAllocator: Allocator<f64, X, U1> +
+                      Allocator<f64, H, U1> +
+                      Allocator<f64, Y, U1> +
+                      Allocator<f64, U1, DimSum<X, U1>> +
+                      Allocator<f64, H, DimSum<X, U1>> +
+                      Allocator<f64, Y, DimSum<H, U1>> +
+                      Allocator<f64, DimSum<H, U1>, Y> +
+                      Reallocator<f64, X, U1, DimSum<X, U1>, U1> +
+                      Reallocator<f64, H, U1, DimSum<H, U1>, U1> +
+                      Reallocator<f64, U1, H, U1, DimSum<H, U1>>
 {
-    fn optimize(&self, model: &mut NeuralNetwork<A, C, Self>, data: &[(DVector<f64>, DVector<f64>)]) {
+    fn optimize(&self, model: &mut NeuralNetwork<X, H, Y, A, C>, data: &[VectorN<f64, X>], labels: &[VectorN<f64, Y>]) {
         let mut rng = thread_rng();
         let mut shuffled_indices: Vec<usize> = (0..data.len()).collect();
 
         for batch in 0..(data.len() / self.batch_size) {
+            println!("Batch {}", batch + 1);
             rng.shuffle(&mut shuffled_indices);
             let batch_start = batch * self.batch_size;
             let batch_end = cmp::min(batch_start + self.batch_size, data.len());
-            let (mut avg_b_grads, mut avg_w_grads) = model.compute_grad(
-                &data[shuffled_indices[batch_start]].0,
-                &data[shuffled_indices[batch_start]].1
+            let mut avg_grads = model.compute_grad(
+                &data[shuffled_indices[batch_start]],
+                &labels[shuffled_indices[batch_start]]
             );
 
-            for i in (batch_start + 1)..batch_end {
-                let data_point = &data[shuffled_indices[batch * self.batch_size + i]];
-                let (b_grads, w_grads) = model.compute_grad(&data_point.0, &data_point.1);
+            for i in (batch * self.batch_size)..(batch * self.batch_size + batch_end) {
+                let grads = model.compute_grad(&data[i], &labels[i]);
 
-                for j in 0..2 {
-                    avg_b_grads[j] += &b_grads[j];
-                    avg_w_grads[j] += &w_grads[j];
-                }
+                avg_grads.0 += &grads.0;
+                avg_grads.1 += &grads.1;
             }
 
-            for i in 0..2 {
-                avg_b_grads[i].apply(|b| -self.learning_rate * b / (data.len() as f64));
-                avg_w_grads[i].apply(|w| -self.learning_rate * w / (data.len() as f64));
-            }
+            avg_grads.0.apply(|b| -self.learning_rate * b / (data.len() as f64));
+            avg_grads.1.apply(|w| -self.learning_rate * w / (data.len() as f64));
 
-            model.optimize(&avg_b_grads, &avg_w_grads)
+            model.apply_grad(&avg_grads);
         }
     }
 }
-*/

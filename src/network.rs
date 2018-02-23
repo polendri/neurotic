@@ -19,7 +19,16 @@ where
     C: CostFunction<Y>,
     <X as DimAdd<U1>>::Output: DimName,
     <H as DimAdd<U1>>::Output: DimName,
-    DefaultAllocator: Allocator<f64, H, DimSum<X, U1>> + Allocator<f64, Y, DimSum<H, U1>> + Allocator<f64, Y, U1>
+    DefaultAllocator: Allocator<f64, X, U1> +
+                      Allocator<f64, H, U1> +
+                      Allocator<f64, Y, U1> +
+                      Allocator<f64, U1, DimSum<X, U1>> +
+                      Allocator<f64, H, DimSum<X, U1>> +
+                      Allocator<f64, Y, DimSum<H, U1>> +
+                      Allocator<f64, DimSum<H, U1>, Y> +
+                      Reallocator<f64, X, U1, DimSum<X, U1>, U1> +
+                      Reallocator<f64, H, U1, DimSum<H, U1>, U1> +
+                      Reallocator<f64, U1, H, U1, DimSum<H, U1>>
 {
     /// The weights and biases of the neural network. The first component of the tuple is an
     /// `H*(X+1)` matrix whose first row represents the biases for each neuron in the hidden layer,
@@ -73,8 +82,8 @@ where
         a2
     }
 
-    pub fn compute_grad(&self, input: VectorN<f64, X>, target: &VectorN<f64, Y>) -> (MatrixMN<f64, H, DimSum<X, U1>>, MatrixMN<f64, Y, DimSum<H, U1>>) {
-        let x = input.insert_row(0, 1.0);
+    pub fn compute_grad(&self, input: &VectorN<f64, X>, target: &VectorN<f64, Y>) -> (MatrixMN<f64, H, DimSum<X, U1>>, MatrixMN<f64, Y, DimSum<H, U1>>) {
+        let x = input.clone().insert_row(0, 1.0);
 
         // Feedforward to compute output values and activations
         let z1: VectorN<f64, H> = &self.weights.0 * &x;
@@ -84,7 +93,7 @@ where
 
         // Compute the output layer's output error
         let err2: VectorN<f64, Y> = {
-            let mut result = C::eval_grad(&a2, &target);
+            let mut result = C::eval_grad(&a2, target);
             result.component_mul_assign(&z2.map(A::eval_grad));
             result
         };
@@ -102,5 +111,10 @@ where
         let w_grad2: MatrixMN<f64, Y, DimSum<H, U1>> = &err2 * &a1.transpose();
 
         (w_grad1, w_grad2)
+    }
+
+    pub fn apply_grad(&mut self, grads: &(MatrixMN<f64, H, DimSum<X, U1>>, MatrixMN<f64, Y, DimSum<H, U1>>)) {
+        self.weights.0 += &grads.0;
+        self.weights.1 += &grads.1;
     }
 }
