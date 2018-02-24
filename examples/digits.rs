@@ -19,7 +19,6 @@ use neurotic::activation::Sigmoid;
 use neurotic::cost::{CostFunction, MeanSquared};
 use neurotic::initializer::InputNormalizedNormal;
 use neurotic::optimizer::{StochasticGradientDescent, Optimizer};
-//use neurotic::optimizer::{GradientDescent, Optimizer};
 
 fn read_images<M>(data: &[u8]) -> Vec<VectorN<f64, M>>
 where
@@ -68,7 +67,7 @@ where
 }
 
 fn main() {
-    const ITERATION_COUNT: usize = 30;
+    const ITERATION_COUNT: usize = 20;
 
     let training_image_bytes = include_bytes!("data/train-images-idx3-ubyte.gz");
     let training_label_bytes = include_bytes!("data/train-labels-idx1-ubyte.gz");
@@ -85,7 +84,6 @@ fn main() {
     println!("Initializing neural network...");
     let mut network: NeuralNetwork<U784, U30, U10, Sigmoid, MeanSquared> = NeuralNetwork::new::<InputNormalizedNormal>();
     let optimizer = StochasticGradientDescent { batch_size: 30, learning_rate: 3.0 };
-    //let optimizer = GradientDescent { learning_rate: 3.0 };
     println!("...Done");
 
     for i in 0..ITERATION_COUNT {

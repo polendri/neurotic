@@ -3,6 +3,9 @@ name = "neurotic"
 version = "0.1.0"
 authors = ["Paul Hendry <paul@pshendry.com>"]
 
+[profile.release]
+opt-level = 3
+
 [dependencies]
 nalgebra = "0.14.0"
 rand = "^0.4.2"

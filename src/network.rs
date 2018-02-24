@@ -100,7 +100,6 @@ where
 
         // Backpropagate the output error
         let err1: VectorN<f64, H> = {
-            // TODO: cache the weights transpose?
             let mut result: VectorN<f64, H> = &self.weights.1.transpose().fixed_rows::<H>(1) * &err2;
             result.component_mul_assign(&z1.map(A::eval_grad));
             result
