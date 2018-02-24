@@ -13,10 +13,13 @@ where
     Y: DimName,
     <X as DimAdd<U1>>::Output: DimName,
     <H as DimAdd<U1>>::Output: DimName,
-    DefaultAllocator: Allocator<f64, H, DimSum<X, U1>> + Allocator<f64, Y, DimSum<H, U1>>
+    DefaultAllocator: Allocator<f64, H, DimSum<X, U1>> + Allocator<f64, Y, DimSum<H, U1>>,
 {
     /// Generate a set of initial weight matrices.
-    fn weights() -> (MatrixMN<f64, H, DimSum<X, U1>>, MatrixMN<f64, Y, DimSum<H, U1>>);
+    fn weights() -> (
+        MatrixMN<f64, H, DimSum<X, U1>>,
+        MatrixMN<f64, Y, DimSum<H, U1>>,
+    );
 }
 
 /// Initializer using a Standard Normal distribution.
@@ -29,9 +32,12 @@ where
     Y: DimName,
     <X as DimAdd<U1>>::Output: DimName,
     <H as DimAdd<U1>>::Output: DimName,
-    DefaultAllocator: Allocator<f64, H, DimSum<X, U1>> + Allocator<f64, Y, DimSum<H, U1>>
+    DefaultAllocator: Allocator<f64, H, DimSum<X, U1>> + Allocator<f64, Y, DimSum<H, U1>>,
 {
-    fn weights() -> (MatrixMN<f64, H, DimSum<X, U1>>, MatrixMN<f64, Y, DimSum<H, U1>>) {
+    fn weights() -> (
+        MatrixMN<f64, H, DimSum<X, U1>>,
+        MatrixMN<f64, Y, DimSum<H, U1>>,
+    ) {
         let mut sampler = distribution::StandardNormal::new();
         (
             MatrixMN::<f64, H, DimSum<X, U1>>::from_fn(|_, _| sampler.sample()),
@@ -51,9 +57,12 @@ where
     Y: DimName,
     <X as DimAdd<U1>>::Output: DimName,
     <H as DimAdd<U1>>::Output: DimName,
-    DefaultAllocator: Allocator<f64, H, DimSum<X, U1>> + Allocator<f64, Y, DimSum<H, U1>>
+    DefaultAllocator: Allocator<f64, H, DimSum<X, U1>> + Allocator<f64, Y, DimSum<H, U1>>,
 {
-    fn weights() -> (MatrixMN<f64, H, DimSum<X, U1>>, MatrixMN<f64, Y, DimSum<H, U1>>) {
+    fn weights() -> (
+        MatrixMN<f64, H, DimSum<X, U1>>,
+        MatrixMN<f64, Y, DimSum<H, U1>>,
+    ) {
         let mut sampler = distribution::StandardNormal::new();
         (
             MatrixMN::<f64, H, DimSum<X, U1>>::from_fn(|r, _| {

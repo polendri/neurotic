@@ -18,7 +18,7 @@ use neurotic::NeuralNetwork;
 use neurotic::activation::Sigmoid;
 use neurotic::cost::{CostFunction, MeanSquared};
 use neurotic::initializer::InputNormalizedNormal;
-use neurotic::optimizer::{StochasticGradientDescent, Optimizer};
+use neurotic::optimizer::{Optimizer, StochasticGradientDescent};
 
 fn read_images<M>(data: &[u8]) -> Vec<VectorN<f64, M>>
 where
@@ -38,7 +38,8 @@ where
     let num_cols: u32 = reader.read_u32::<BigEndian>().unwrap();
     debug_assert_eq!(28, num_cols);
 
-    reader.bytes()
+    reader
+        .bytes()
         .map(|b| (b.unwrap() as f64) / 255.0)
         .batching(|it| Some(VectorN::<f64, M>::from_iterator(it.take(M::dim()))))
         .take(count as usize)
@@ -57,12 +58,14 @@ where
 
     let count: u32 = reader.read_u32::<BigEndian>().unwrap();
 
-    reader.bytes()
+    reader
+        .bytes()
         .map(|b| {
             let mut val: VectorN<f64, M> = VectorN::zeros();
             val[b.unwrap() as usize] = 1.0;
             val
-        }).take(count as usize)
+        })
+        .take(count as usize)
         .collect()
 }
 
@@ -82,7 +85,8 @@ fn main() {
     println!("...Done");
 
     println!("Initializing neural network...");
-    let mut network: NeuralNetwork<U784, U30, U10, Sigmoid, MeanSquared> = NeuralNetwork::new::<InputNormalizedNormal>();
+    let mut network: NeuralNetwork<U784, U30, U10, Sigmoid, MeanSquared> =
+        NeuralNetwork::new::<InputNormalizedNormal>();
     let optimizer = StochasticGradientDescent::new(3., 30);
     println!("...Done");
 
@@ -101,13 +105,24 @@ fn main() {
         let mut num_correct: usize = 0;
         for (x, t) in test_images[..].iter().zip(&test_labels[..]) {
             let y = network.feedforward(x);
-            let t_digit: usize = t.iter().enumerate().max_by(|&(_, item1), &(_, item2)| item1.partial_cmp(item2).unwrap()).unwrap().0;
-            let y_digit: usize = y.iter().enumerate().max_by(|&(_, item1), &(_, item2)| item1.partial_cmp(item2).unwrap()).unwrap().0;
+            let t_digit: usize = t.iter()
+                .enumerate()
+                .max_by(|&(_, item1), &(_, item2)| item1.partial_cmp(item2).unwrap())
+                .unwrap()
+                .0;
+            let y_digit: usize = y.iter()
+                .enumerate()
+                .max_by(|&(_, item1), &(_, item2)| item1.partial_cmp(item2).unwrap())
+                .unwrap()
+                .0;
 
             if t_digit == y_digit {
                 num_correct += 1;
             }
         }
-        println!("Accuracy: {}", (num_correct as f64) / (test_images.len() as f64));
+        println!(
+            "Accuracy: {}",
+            (num_correct as f64) / (test_images.len() as f64)
+        );
     }
 }

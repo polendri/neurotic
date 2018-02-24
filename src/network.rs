@@ -19,16 +19,16 @@ where
     C: CostFunction<Y>,
     <X as DimAdd<U1>>::Output: DimName,
     <H as DimAdd<U1>>::Output: DimName,
-    DefaultAllocator: Allocator<f64, X, U1> +
-                      Allocator<f64, H, U1> +
-                      Allocator<f64, Y, U1> +
-                      Allocator<f64, U1, DimSum<X, U1>> +
-                      Allocator<f64, H, DimSum<X, U1>> +
-                      Allocator<f64, Y, DimSum<H, U1>> +
-                      Allocator<f64, DimSum<H, U1>, Y> +
-                      Reallocator<f64, X, U1, DimSum<X, U1>, U1> +
-                      Reallocator<f64, H, U1, DimSum<H, U1>, U1> +
-                      Reallocator<f64, U1, H, U1, DimSum<H, U1>>
+    DefaultAllocator: Allocator<f64, X, U1>
+        + Allocator<f64, H, U1>
+        + Allocator<f64, Y, U1>
+        + Allocator<f64, U1, DimSum<X, U1>>
+        + Allocator<f64, H, DimSum<X, U1>>
+        + Allocator<f64, Y, DimSum<H, U1>>
+        + Allocator<f64, DimSum<H, U1>, Y>
+        + Reallocator<f64, X, U1, DimSum<X, U1>, U1>
+        + Reallocator<f64, H, U1, DimSum<H, U1>, U1>
+        + Reallocator<f64, U1, H, U1, DimSum<H, U1>>,
 {
     /// The weights and biases of the neural network. The first component of the tuple is an
     /// `H*(X+1)` matrix whose first row represents the biases for each neuron in the hidden layer,
@@ -36,7 +36,10 @@ where
     /// the `r`th neuron in the hidden layer. The second component of the tuple is similarly a
     /// `Y*(H+1)` matrix representing the biases of the output layer and the weights connecting the
     /// hidden and output layers.
-    weights: (MatrixMN<f64, H, DimSum<X, U1>>, MatrixMN<f64, Y, DimSum<H, U1>>),
+    weights: (
+        MatrixMN<f64, H, DimSum<X, U1>>,
+        MatrixMN<f64, Y, DimSum<H, U1>>,
+    ),
 
     /// The activation function applied to the output values of neurons.
     activation_function: PhantomData<A>,
@@ -54,16 +57,16 @@ where
     C: CostFunction<Y>,
     <X as DimAdd<U1>>::Output: DimName,
     <H as DimAdd<U1>>::Output: DimName,
-    DefaultAllocator: Allocator<f64, X, U1> +
-                      Allocator<f64, H, U1> +
-                      Allocator<f64, Y, U1> +
-                      Allocator<f64, U1, DimSum<X, U1>> +
-                      Allocator<f64, H, DimSum<X, U1>> +
-                      Allocator<f64, Y, DimSum<H, U1>> +
-                      Allocator<f64, DimSum<H, U1>, Y> +
-                      Reallocator<f64, X, U1, DimSum<X, U1>, U1> +
-                      Reallocator<f64, H, U1, DimSum<H, U1>, U1> +
-                      Reallocator<f64, U1, H, U1, DimSum<H, U1>>
+    DefaultAllocator: Allocator<f64, X, U1>
+        + Allocator<f64, H, U1>
+        + Allocator<f64, Y, U1>
+        + Allocator<f64, U1, DimSum<X, U1>>
+        + Allocator<f64, H, DimSum<X, U1>>
+        + Allocator<f64, Y, DimSum<H, U1>>
+        + Allocator<f64, DimSum<H, U1>, Y>
+        + Reallocator<f64, X, U1, DimSum<X, U1>, U1>
+        + Reallocator<f64, H, U1, DimSum<H, U1>, U1>
+        + Reallocator<f64, U1, H, U1, DimSum<H, U1>>,
 {
     /// Instantiates a new `NeuralNetwork`, initializing its weights using the specified
     /// `Initializer` type.
@@ -76,7 +79,12 @@ where
     }
 
     /// Gets a reference to the weights of the network.
-    pub fn weights(&self) -> &(MatrixMN<f64, H, DimSum<X, U1>>, MatrixMN<f64, Y, DimSum<H, U1>>) {
+    pub fn weights(
+        &self,
+    ) -> &(
+        MatrixMN<f64, H, DimSum<X, U1>>,
+        MatrixMN<f64, Y, DimSum<H, U1>>,
+    ) {
         &self.weights
     }
 
@@ -91,7 +99,14 @@ where
     }
 
     /// Computes the gradient of the cost function with respect to each weight of the network.
-    pub fn compute_grad(&self, input: &VectorN<f64, X>, target: &VectorN<f64, Y>) -> (MatrixMN<f64, H, DimSum<X, U1>>, MatrixMN<f64, Y, DimSum<H, U1>>) {
+    pub fn compute_grad(
+        &self,
+        input: &VectorN<f64, X>,
+        target: &VectorN<f64, Y>,
+    ) -> (
+        MatrixMN<f64, H, DimSum<X, U1>>,
+        MatrixMN<f64, Y, DimSum<H, U1>>,
+    ) {
         let x = input.clone().insert_row(0, 1.0);
 
         // Feedforward to compute output values and activations
@@ -109,7 +124,8 @@ where
 
         // Backpropagate the output error
         let err1: VectorN<f64, H> = {
-            let mut result: VectorN<f64, H> = &self.weights.1.transpose().fixed_rows::<H>(1) * &err2;
+            let mut result: VectorN<f64, H> =
+                &self.weights.1.transpose().fixed_rows::<H>(1) * &err2;
             result.component_mul_assign(&z1.map(A::eval_grad));
             result
         };
@@ -123,7 +139,13 @@ where
 
     /// Given a set of gradients, applies them (i.e. adds them) to the current weights of the
     /// network.
-    pub fn apply_grad(&mut self, grads: &(MatrixMN<f64, H, DimSum<X, U1>>, MatrixMN<f64, Y, DimSum<H, U1>>)) {
+    pub fn apply_grad(
+        &mut self,
+        grads: &(
+            MatrixMN<f64, H, DimSum<X, U1>>,
+            MatrixMN<f64, Y, DimSum<H, U1>>,
+        ),
+    ) {
         self.weights.0 += &grads.0;
         self.weights.1 += &grads.1;
     }
