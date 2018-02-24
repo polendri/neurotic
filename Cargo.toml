@@ -16,4 +16,3 @@ byteorder = "^1.2.1"
 # clippy = { version = "*" }
 flate2 = "^1.0.1"
 itertools = "0.7.6"
-rayon = "^1.0.0"

@@ -1,3 +1,7 @@
+//! An example of recognizing handwritten digits using the MNIST database.
+//! Uses hyperparameters similar to those in Michael Nielsen's "Neural networks and deep learning"
+//! book (http://neuralnetworksanddeeplearning.com/)
+
 extern crate byteorder;
 extern crate flate2;
 extern crate itertools;
@@ -20,6 +24,8 @@ use neurotic::cost::{CostFunction, MeanSquared};
 use neurotic::initializer::InputNormalizedNormal;
 use neurotic::optimizer::{Optimizer, StochasticGradientDescent};
 
+/// Reads the MNIST image data from a Gzipped slice of data, returning a `Vec` of input vectors for
+/// the network.
 fn read_images<M>(data: &[u8]) -> Vec<VectorN<f64, M>>
 where
     M: DimName,
@@ -46,6 +52,8 @@ where
         .collect()
 }
 
+/// Reads the MNIST label data from a Gzipped slice of data, returning a `Vec` of output vectors for
+/// the network.
 fn read_labels<M: DimName>(data: &[u8]) -> Vec<VectorN<f64, M>>
 where
     M: DimName,
@@ -61,6 +69,8 @@ where
     reader
         .bytes()
         .map(|b| {
+            // Create a unit vector with a 1 at the index representing the digit, and zeros
+            // elsewhere.
             let mut val: VectorN<f64, M> = VectorN::zeros();
             val[b.unwrap() as usize] = 1.0;
             val
@@ -72,6 +82,8 @@ where
 fn main() {
     const ITERATION_COUNT: usize = 20;
 
+    // Include the data directly in the binary. Probably undesirable, but it avoids any issues with
+    // locating the path of the data files relative to the compiled binary.
     let training_image_bytes = include_bytes!("data/train-images-idx3-ubyte.gz");
     let training_label_bytes = include_bytes!("data/train-labels-idx1-ubyte.gz");
     let test_image_bytes = include_bytes!("data/t10k-images-idx3-ubyte.gz");
@@ -92,8 +104,11 @@ fn main() {
 
     for i in 0..ITERATION_COUNT {
         println!("Iteration {}:", i + 1);
+
+        // Run an iteration of gradient descent
         optimizer.optimize(&mut network, &training_images[..], &training_labels[..]);
 
+        // Compute the cost of the current network across all training data
         let mut cost: f64 = 0.0;
         for (x, t) in training_images[..].iter().zip(&training_labels[..]) {
             let y = network.feedforward(x);
@@ -102,6 +117,7 @@ fn main() {
         cost /= training_images.len() as f64;
         println!("Cost: {}", cost);
 
+        // Compute the network's accuracy accross all test data
         let mut num_correct: usize = 0;
         for (x, t) in test_images[..].iter().zip(&test_labels[..]) {
             let y = network.feedforward(x);

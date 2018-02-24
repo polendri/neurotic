@@ -152,13 +152,14 @@ where
             rng.shuffle(&mut shuffled_indices);
             let batch_start = batch * self.batch_size;
             let batch_end = cmp::min(batch_start + self.batch_size, data.len());
+
             let mut avg_grads = model.compute_grad(
                 &data[shuffled_indices[batch_start]],
                 &labels[shuffled_indices[batch_start]],
             );
 
             for i in (batch_start + 1)..batch_end {
-                let grads = model.compute_grad(&data[i], &labels[i]);
+                let grads = model.compute_grad(&data[shuffled_indices[i]], &labels[shuffled_indices[i]]);
 
                 avg_grads.0 += &grads.0;
                 avg_grads.1 += &grads.1;
