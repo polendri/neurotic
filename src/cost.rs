@@ -3,7 +3,7 @@
 use nalgebra::{DefaultAllocator, Dim, U1, VectorN};
 use nalgebra::allocator::Allocator;
 
-/// Cost function
+/// A cost function, which evaluates the cost of a hypothesis relative to the correct value.
 pub trait CostFunction<Y>
 where
     Y: Dim,
@@ -17,7 +17,6 @@ where
 }
 
 /// Quadratic cost function
-#[derive(Clone, Copy, Debug)]
 pub struct MeanSquared;
 
 impl<Y> CostFunction<Y> for MeanSquared
@@ -29,7 +28,7 @@ where
         let mut diff = input - target;
         diff.apply(|e| e.powf(2.));
         let sum: f64 = diff.iter().sum();
-        sum / 2.0
+        sum / 2.
     }
 
     fn eval_grad(input: &VectorN<f64, Y>, target: &VectorN<f64, Y>) -> VectorN<f64, Y> {

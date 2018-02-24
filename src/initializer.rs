@@ -5,7 +5,7 @@ use nalgebra::allocator::Allocator;
 
 use distribution::{self, Distribution};
 
-/// Trait for types which can initialize the weights and biases of a neural network.
+/// Initializes the weights and biases of a neural network.
 pub trait Initializer<X, H, Y>
 where
     X: DimName + DimAdd<U1>,

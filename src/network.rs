@@ -1,4 +1,4 @@
-//! Feedforward neural networks.
+//! Feedforward neural networks
 
 use std::marker::PhantomData;
 
@@ -9,7 +9,7 @@ use activation::ActivationFunction;
 use cost::CostFunction;
 use initializer::Initializer;
 
-/// A feedforward neural network.
+/// A feedforward neural network with compile-time layer sizes.
 pub struct NeuralNetwork<X, H, Y, A, C>
 where
     X: DimName + DimAdd<U1>,
@@ -65,6 +65,8 @@ where
                       Reallocator<f64, H, U1, DimSum<H, U1>, U1> +
                       Reallocator<f64, U1, H, U1, DimSum<H, U1>>
 {
+    /// Instantiates a new `NeuralNetwork`, initializing its weights using the specified
+    /// `Initializer` type.
     pub fn new<I: Initializer<X, H, Y>>() -> Self {
         NeuralNetwork {
             weights: I::weights(),
@@ -73,6 +75,12 @@ where
         }
     }
 
+    /// Gets a reference to the weights of the network.
+    pub fn weights(&self) -> &(MatrixMN<f64, H, DimSum<X, U1>>, MatrixMN<f64, Y, DimSum<H, U1>>) {
+        &self.weights
+    }
+
+    /// Computes an output vector from an input vector.
     pub fn feedforward(&self, input: &VectorN<f64, X>) -> VectorN<f64, Y> {
         let mut a1: VectorN<f64, H> = &self.weights.0 * input.clone().insert_row(0, 1.0);
         a1.apply(A::eval);
@@ -82,6 +90,7 @@ where
         a2
     }
 
+    /// Computes the gradient of the cost function with respect to each weight of the network.
     pub fn compute_grad(&self, input: &VectorN<f64, X>, target: &VectorN<f64, Y>) -> (MatrixMN<f64, H, DimSum<X, U1>>, MatrixMN<f64, Y, DimSum<H, U1>>) {
         let x = input.clone().insert_row(0, 1.0);
 
@@ -112,6 +121,8 @@ where
         (w_grad1, w_grad2)
     }
 
+    /// Given a set of gradients, applies them (i.e. adds them) to the current weights of the
+    /// network.
     pub fn apply_grad(&mut self, grads: &(MatrixMN<f64, H, DimSum<X, U1>>, MatrixMN<f64, Y, DimSum<H, U1>>)) {
         self.weights.0 += &grads.0;
         self.weights.1 += &grads.1;

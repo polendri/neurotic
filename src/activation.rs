@@ -1,6 +1,6 @@
-//! Activation functions.
+//! Activation functions
 
-/// Trait for types which can be used as an activation function.
+/// An activation function, which converts an neuron input to its activation value (output).
 pub trait ActivationFunction {
     /// Evaluate the activation function on the provided input.
     fn eval(x: f64) -> f64;
@@ -12,7 +12,6 @@ pub trait ActivationFunction {
 /// Exponential activation function.
 ///
 /// `f(x) = e^x`
-#[derive(Clone, Copy, Debug)]
 pub struct Exponential;
 
 impl ActivationFunction for Exponential {
@@ -30,7 +29,6 @@ impl ActivationFunction for Exponential {
 /// Linear activation function.
 ///
 /// `f(x) = x`
-#[derive(Clone, Copy, Debug)]
 pub struct Linear;
 
 impl ActivationFunction for Linear {

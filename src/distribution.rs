@@ -1,15 +1,15 @@
-//! Defines several random distributions for initializing weights and biases.
+//! Random distributions for initializing weights.
 
 use rand::{weak_rng, XorShiftRng};
 use rand::distributions::{self, Sample};
 
-/// A type that can sample values according to a random distribution.
+/// Sample values according to a random distribution.
 pub trait Distribution {
     /// Generate a random `f64` according to the distribution.
     fn sample(&mut self) -> f64;
 }
 
-/// The Normal (or Gaussian) distribution.
+/// The Normal (a.k.a. Gaussian) distribution.
 pub struct Normal {
     rng: XorShiftRng,
     normal: distributions::Normal,
@@ -36,7 +36,7 @@ impl Distribution for Normal {
 pub struct StandardNormal(Normal);
 
 impl StandardNormal {
-    /// Constructs a new `GaussianDistribution`.
+    /// Constructs a new `StandardNormal`.
     pub fn new() -> Self {
         StandardNormal(Normal::new(0., 1.))
     }

@@ -10,6 +10,7 @@ use activation::ActivationFunction;
 use cost::CostFunction;
 use network::NeuralNetwork;
 
+/// Optimizes a `NeuralNetwork` model given input data and expected output.
 pub trait Optimizer<X, H, Y, A, C>
 where
     X: DimName + DimAdd<U1>,
@@ -30,13 +31,23 @@ where
                       Reallocator<f64, H, U1, DimSum<H, U1>, U1> +
                       Reallocator<f64, U1, H, U1, DimSum<H, U1>>
 {
-    fn optimize(&self, model: &mut NeuralNetwork<X, H, Y, A, C>, data: &[VectorN<f64, X>], labels: &[VectorN<f64, Y>]);
+    /// Optimizes a `NeuralNetwork` model given slices of input data and of expected output.
+    fn optimize(&self,
+                model: &mut NeuralNetwork<X, H, Y, A, C>,
+                data: &[VectorN<f64, X>], labels: &[VectorN<f64, Y>]);
 }
 
 /// Gradient descent optimizer
 #[derive(Clone, Copy, Debug)]
 pub struct GradientDescent {
-    pub learning_rate: f64,
+    learning_rate: f64,
+}
+
+impl GradientDescent {
+    /// Instantiates a new `GradientDescent` with the specified learning rate.
+    pub fn new(learning_rate: f64) -> Self {
+        GradientDescent { learning_rate }
+    }
 }
 
 impl<X, H, Y, A, C> Optimizer<X, H, Y, A, C> for GradientDescent
@@ -59,7 +70,11 @@ where
                       Reallocator<f64, H, U1, DimSum<H, U1>, U1> +
                       Reallocator<f64, U1, H, U1, DimSum<H, U1>>
 {
-    fn optimize(&self, model: &mut NeuralNetwork<X, H, Y, A, C>, data: &[VectorN<f64, X>], labels: &[VectorN<f64, Y>]) {
+    fn optimize(&self,
+                model: &mut NeuralNetwork<X, H, Y, A, C>,
+                data: &[VectorN<f64, X>], labels: &[VectorN<f64, Y>]) {
+        debug_assert_eq!(data.len(), labels.len());
+
         let mut avg_grads = model.compute_grad(&data[0], &labels[0]);
 
         for i in 1..data.len() {
@@ -78,8 +93,15 @@ where
 /// Stochastic gradient descent optimizer
 #[derive(Clone, Copy, Debug)]
 pub struct StochasticGradientDescent {
-    pub batch_size: usize,
-    pub learning_rate: f64,
+    batch_size: usize,
+    learning_rate: f64,
+}
+
+impl StochasticGradientDescent {
+    /// Instantiates a new `StochasticGradientDescent` with the specified learning rate.
+    pub fn new(learning_rate: f64, batch_size: usize) -> Self {
+        StochasticGradientDescent { batch_size, learning_rate }
+    }
 }
 
 impl<X, H, Y, A, C> Optimizer<X, H, Y, A, C> for StochasticGradientDescent
@@ -102,7 +124,11 @@ where
                       Reallocator<f64, H, U1, DimSum<H, U1>, U1> +
                       Reallocator<f64, U1, H, U1, DimSum<H, U1>>
 {
-    fn optimize(&self, model: &mut NeuralNetwork<X, H, Y, A, C>, data: &[VectorN<f64, X>], labels: &[VectorN<f64, Y>]) {
+    fn optimize(&self,
+                model: &mut NeuralNetwork<X, H, Y, A, C>,
+                data: &[VectorN<f64, X>], labels: &[VectorN<f64, Y>]) {
+        debug_assert_eq!(data.len(), labels.len());
+
         let mut rng = thread_rng();
         let mut shuffled_indices: Vec<usize> = (0..data.len()).collect();
 

@@ -83,7 +83,7 @@ fn main() {
 
     println!("Initializing neural network...");
     let mut network: NeuralNetwork<U784, U30, U10, Sigmoid, MeanSquared> = NeuralNetwork::new::<InputNormalizedNormal>();
-    let optimizer = StochasticGradientDescent { batch_size: 30, learning_rate: 3.0 };
+    let optimizer = StochasticGradientDescent::new(3., 30);
     println!("...Done");
 
     for i in 0..ITERATION_COUNT {
