@@ -19,6 +19,7 @@ use neurotic::activation::Sigmoid;
 use neurotic::cost::{CostFunction, MeanSquared};
 use neurotic::initializer::InputNormalizedNormal;
 use neurotic::optimizer::{StochasticGradientDescent, Optimizer};
+//use neurotic::optimizer::{GradientDescent, Optimizer};
 
 fn read_images<M>(data: &[u8]) -> Vec<VectorN<f64, M>>
 where
@@ -41,7 +42,7 @@ where
     reader.bytes()
         .map(|b| (b.unwrap() as f64) / 255.0)
         .batching(|it| Some(VectorN::<f64, M>::from_iterator(it.take(M::dim()))))
-        .take(120 as usize)
+        .take(count as usize)
         .collect()
 }
 
@@ -62,7 +63,7 @@ where
             let mut val: VectorN<f64, M> = VectorN::zeros();
             val[b.unwrap() as usize] = 1.0;
             val
-        }).take(120 as usize)
+        }).take(count as usize)
         .collect()
 }
 
@@ -83,19 +84,32 @@ fn main() {
 
     println!("Initializing neural network...");
     let mut network: NeuralNetwork<U784, U30, U10, Sigmoid, MeanSquared> = NeuralNetwork::new::<InputNormalizedNormal>();
-    let optimizer: StochasticGradientDescent = StochasticGradientDescent { batch_size: 30, learning_rate: 3.0 };
+    let optimizer = StochasticGradientDescent { batch_size: 30, learning_rate: 3.0 };
+    //let optimizer = GradientDescent { learning_rate: 3.0 };
     println!("...Done");
 
     for i in 0..ITERATION_COUNT {
         println!("Iteration {}:", i + 1);
-        optimizer.optimize(&mut network, &training_images[..120], &training_labels[..120]);
+        optimizer.optimize(&mut network, &training_images[..], &training_labels[..]);
 
         let mut cost: f64 = 0.0;
-        for (x, t) in training_images[..120].iter().zip(&training_labels[..120]) {
+        for (x, t) in training_images[..].iter().zip(&training_labels[..]) {
             let y = network.feedforward(x);
             cost += MeanSquared::eval(&y, t);
         }
-        cost /= 120.0;
+        cost /= training_images.len() as f64;
         println!("Cost: {}", cost);
+
+        let mut num_correct: usize = 0;
+        for (x, t) in test_images[..].iter().zip(&test_labels[..]) {
+            let y = network.feedforward(x);
+            let t_digit: usize = t.iter().enumerate().max_by(|&(_, item1), &(_, item2)| item1.partial_cmp(item2).unwrap()).unwrap().0;
+            let y_digit: usize = y.iter().enumerate().max_by(|&(_, item1), &(_, item2)| item1.partial_cmp(item2).unwrap()).unwrap().0;
+
+            if t_digit == y_digit {
+                num_correct += 1;
+            }
+        }
+        println!("Accuracy: {}", (num_correct as f64) / (test_images.len() as f64));
     }
 }

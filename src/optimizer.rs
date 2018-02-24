@@ -60,18 +60,18 @@ where
                       Reallocator<f64, U1, H, U1, DimSum<H, U1>>
 {
     fn optimize(&self, model: &mut NeuralNetwork<X, H, Y, A, C>, data: &[VectorN<f64, X>], labels: &[VectorN<f64, Y>]) {
-        let mut grads = model.compute_grad(&data[0], &labels[0]);
+        let mut avg_grads = model.compute_grad(&data[0], &labels[0]);
 
         for i in 1..data.len() {
-            let (b_grads, w_grads) = model.compute_grad(&data[i], &labels[i]);
-            grads.0 += &b_grads;
-            grads.1 += &w_grads;
+            let grads = model.compute_grad(&data[i], &labels[i]);
+            avg_grads.0 += &grads.0;
+            avg_grads.1 += &grads.1;
         }
 
-        grads.0.apply(|w| w - self.learning_rate * w / (data.len() as f64));
-        grads.1.apply(|w| w - self.learning_rate * w / (data.len() as f64));
+        avg_grads.0.apply(|w| -self.learning_rate * w / (data.len() as f64));
+        avg_grads.1.apply(|w| -self.learning_rate * w / (data.len() as f64));
 
-        model.apply_grad(&grads);
+        model.apply_grad(&avg_grads);
     }
 }
 
@@ -115,15 +115,15 @@ where
                 &labels[shuffled_indices[batch_start]]
             );
 
-            for i in batch_start..batch_end {
+            for i in (batch_start + 1)..batch_end {
                 let grads = model.compute_grad(&data[i], &labels[i]);
 
                 avg_grads.0 += &grads.0;
                 avg_grads.1 += &grads.1;
             }
 
-            avg_grads.0.apply(|b| -self.learning_rate * b / (data.len() as f64));
-            avg_grads.1.apply(|w| -self.learning_rate * w / (data.len() as f64));
+            avg_grads.0.apply(|w| -self.learning_rate * w / (self.batch_size as f64));
+            avg_grads.1.apply(|w| -self.learning_rate * w / (self.batch_size as f64));
 
             model.apply_grad(&avg_grads);
         }

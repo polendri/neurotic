@@ -6,10 +6,11 @@ authors = ["Paul Hendry <paul@pshendry.com>"]
 [dependencies]
 nalgebra = "0.14.0"
 rand = "^0.4.2"
-typenum = "^1.7.0"
+typenum = "1.7.0"
 
 [dev-dependencies]
-clippy = { version = "*" }
 byteorder = "^1.2.1"
+# clippy = { version = "*" }
 flate2 = "^1.0.1"
 itertools = "0.7.6"
+rayon = "^1.0.0"
