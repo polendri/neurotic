@@ -73,8 +73,8 @@ where
         }
     }
 
-    pub fn feedforward(&self, input: VectorN<f64, X>) -> VectorN<f64, Y> {
-        let mut a1: VectorN<f64, H> = &self.weights.0 * input.insert_row(0, 1.0);
+    pub fn feedforward(&self, input: &VectorN<f64, X>) -> VectorN<f64, Y> {
+        let mut a1: VectorN<f64, H> = &self.weights.0 * input.clone().insert_row(0, 1.0);
         a1.apply(A::eval);
         let mut a2: VectorN<f64, Y> = &self.weights.1 * a1.insert_row(0, 1.0);
         a2.apply(A::eval);

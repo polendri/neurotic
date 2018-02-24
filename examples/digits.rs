@@ -16,7 +16,7 @@ use typenum::U784;
 
 use neurotic::NeuralNetwork;
 use neurotic::activation::Sigmoid;
-use neurotic::cost::MeanSquared;
+use neurotic::cost::{CostFunction, MeanSquared};
 use neurotic::initializer::InputNormalizedNormal;
 use neurotic::optimizer::{StochasticGradientDescent, Optimizer};
 
@@ -41,7 +41,7 @@ where
     reader.bytes()
         .map(|b| (b.unwrap() as f64) / 255.0)
         .batching(|it| Some(VectorN::<f64, M>::from_iterator(it.take(M::dim()))))
-        .take(count as usize)
+        .take(120 as usize)
         .collect()
 }
 
@@ -62,7 +62,7 @@ where
             let mut val: VectorN<f64, M> = VectorN::zeros();
             val[b.unwrap() as usize] = 1.0;
             val
-        }).take(count as usize)
+        }).take(120 as usize)
         .collect()
 }
 
@@ -88,6 +88,14 @@ fn main() {
 
     for i in 0..ITERATION_COUNT {
         println!("Iteration {}:", i + 1);
-        optimizer.optimize(&mut network, &training_images[..], &training_labels[..]);
+        optimizer.optimize(&mut network, &training_images[..120], &training_labels[..120]);
+
+        let mut cost: f64 = 0.0;
+        for (x, t) in training_images[..120].iter().zip(&training_labels[..120]) {
+            let y = network.feedforward(x);
+            cost += MeanSquared::eval(&y, t);
+        }
+        cost /= 120.0;
+        println!("Cost: {}", cost);
     }
 }

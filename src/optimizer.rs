@@ -107,7 +107,6 @@ where
         let mut shuffled_indices: Vec<usize> = (0..data.len()).collect();
 
         for batch in 0..(data.len() / self.batch_size) {
-            println!("Batch {}", batch + 1);
             rng.shuffle(&mut shuffled_indices);
             let batch_start = batch * self.batch_size;
             let batch_end = cmp::min(batch_start + self.batch_size, data.len());
@@ -116,7 +115,7 @@ where
                 &labels[shuffled_indices[batch_start]]
             );
 
-            for i in (batch * self.batch_size)..(batch * self.batch_size + batch_end) {
+            for i in batch_start..batch_end {
                 let grads = model.compute_grad(&data[i], &labels[i]);
 
                 avg_grads.0 += &grads.0;
