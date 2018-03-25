@@ -108,7 +108,7 @@ fn main() {
         // Run an iteration of gradient descent
         optimizer.optimize(&mut network, &training_images[..], &training_labels[..]);
 
-        // Compute the cost of the current network across all training data
+        // Compute and print the cost of the current network across all training data
         let mut cost: f64 = 0.0;
         for (x, t) in training_images[..].iter().zip(&training_labels[..]) {
             let y = network.feedforward(x);
