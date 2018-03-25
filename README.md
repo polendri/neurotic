@@ -2,14 +2,17 @@
 
 The compile-time feedforward neural network library that no one asked for, written in Rust.
 
-## What is this?
+## PAQ (Presumably-Askable Questions)
+
+### What is this?
 
 It's a [feedforward neural network](https://en.wikipedia.org/wiki/Feedforward_neural_network)
 implementation (currently with only a single hidden layer), roughly following the methods described
 in Michael Nielsen's [Neural Networks and Deep Learning](http://neuralnetworksanddeeplearning.com/).
 What's special about it is that the whole model, including the size of each layer, is defined at
 compile time; this is possible in Rust using the compile-time numbers from the
-[typenum](https://github.com/paholg/typenum) crate.
+[typenum](https://github.com/paholg/typenum) crate, and the [nalgebra](http://nalgebra.org/) linear
+algebra quite which leverages `typenum`.
 
 If you want to define a `neurotic` neural network with 784 input neurons, 30 hidden neurons,
 and 10 output neurons, initialized using a standard normal distribution, using a sigmoid activation
@@ -36,7 +39,7 @@ And finally, to get the output of the trained model for an input:
 let y = network.feedforward(&test_images[0]);
 ```
 
-## Why?
+### ...Why?
 
 Since the sizes of all matrices involved in the algorithm are known at compile
 time, they can be stored in contiguous memory. In theory, this ought to be noticeably
@@ -45,7 +48,7 @@ use of CPU caches.
 
 The only downside is a hideous and inflexible type-parameter-filled API!
 
-## So it's fast?
+### So it's fast then?
 
 It has the potential to be, maybe? I profiled it just enough to determine that the the matrix
 multiplications in the backpropagation and feedforward steps were the vast majority of the CPU
@@ -54,7 +57,9 @@ implement `Send`, which is necessary for parallel threads to pass data around.
 
 Furthermore, this is a CPU-based implementation, so it's not going to compete with actual ML
 frameworks which support GPU acceleration. This was a hobby project to explore neural networks and
-to see if Rust's type was up to the task of building everything up at compile time.
+to see if Rust's type was up to the task of building everything up at compile time. (For the
+curious, the answer is: yes... with great pain. Take a look at the `nalgebra` `Allocator` usage
+littered throughout the project.)
 
 ## Documentation
 
